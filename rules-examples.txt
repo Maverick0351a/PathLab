@@ -1,0 +1,4 @@
+# Example PathLab rules leveraging extended fields
+when sni_contains localhost then ABORT_AFTER_CH
+when alpn_contains h2 then LATENCY_50MS_JITTER_10
+when cipher_count > 30 then MTU1300_BLACKHOLE

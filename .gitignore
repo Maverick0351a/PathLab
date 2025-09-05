@@ -1,0 +1,13 @@
+.DS_Store
+*.log
+*.out
+*.exe
+*.zip
+bin/
+dist/
+build/
+coverage/
+*.test
+*.pem
+receipts/
+pathlab-ed25519.key

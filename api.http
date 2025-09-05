@@ -1,0 +1,11 @@
+### status
+GET http://localhost:8080/impair/status
+
+### apply abort after clienthello
+POST http://localhost:8080/impair/apply?profile=ABORT_AFTER_CH
+
+### apply mtu blackhole
+POST http://localhost:8080/impair/apply?profile=MTU1300_BLACKHOLE&threshold_bytes=1300
+
+### clear
+POST http://localhost:8080/impair/clear

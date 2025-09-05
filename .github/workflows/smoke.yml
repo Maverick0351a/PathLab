@@ -1,0 +1,64 @@
+name: PathLab Smoke
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Show Docker version
+        run: |
+          docker version
+          docker compose version || true
+
+      - name: Build & start test stack
+        run: |
+          docker compose -f docker-compose.example.yml up -d --build
+          echo 'Waiting for pathlab to listen (admin :8080)...'
+          for i in {1..30}; do
+            if curl -fsS http://localhost:8080/healthz >/dev/null 2>&1; then echo 'pathlab up'; break; fi
+            sleep 1
+            if [ "$i" = "30" ]; then echo 'pathlab did not become ready'; docker compose logs pathlab; exit 1; fi
+          done
+
+      - name: Baseline success (clean profile)
+        run: |
+          set -e
+            curl -k --retry 5 --retry-delay 1 https://localhost:10443/ | grep -i 'hello' || {
+              echo 'Did not get expected upstream response';
+              docker compose logs pathlab; exit 1; }
+
+      - name: Apply PMTUD black-hole
+        run: curl -sS -XPOST "http://localhost:8080/impair/apply?profile=MTU1300_BLACKHOLE&threshold_bytes=1300"
+
+      - name: Assert client timeout < 3s
+        run: |
+          set -e
+          start=$(date +%s)
+          if curl -k --max-time 3 https://localhost:10443/; then
+            echo 'Expected timeout, got success';
+            docker compose logs pathlab; exit 1;
+          fi || true
+          dur=$(( $(date +%s) - start ))
+          echo "Timeout as expected in ${dur}s"
+          if [ $dur -gt 5 ]; then
+            echo 'Timeout took too long (>5s)';
+            docker compose logs pathlab; exit 1;
+          fi
+
+      - name: Logs (always)
+        if: always()
+        run: |
+          docker compose logs --no-color pathlab || true
+
+      - name: Tear down
+        if: always()
+        run: docker compose -f docker-compose.example.yml down -v || true

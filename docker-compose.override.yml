@@ -1,0 +1,15 @@
+version: "3.8"
+services:
+  pathlab:
+    build: .
+    image: pathlab:latest
+    environment:
+      - PATHLAB_UPSTREAM=nginx:8443
+      - PATHLAB_LISTEN=:10443
+      - PATHLAB_ADMIN=:8080
+    ports:
+      - "10443:10443"
+      - "8080:8080"
+    depends_on:
+      - nginx
+    restart: unless-stopped

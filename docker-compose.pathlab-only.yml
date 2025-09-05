@@ -1,0 +1,11 @@
+services:
+  pathlab:
+    image: pathlab:latest
+    environment:
+      - PATHLAB_UPSTREAM=host.docker.internal:8443
+      - PATHLAB_LISTEN=:10443
+      - PATHLAB_ADMIN=:8080
+    ports:
+      - "11443:10443"
+      - "18080:8080"
+    restart: unless-stopped
