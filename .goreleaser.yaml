@@ -1,0 +1,32 @@
+# Minimal GoReleaser config for PathLab
+project_name: pathlab
+builds:
+  - id: pathlab
+    main: ./cmd/pathlab
+    binary: pathlab
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+archives:
+  - builds: [pathlab]
+    format: tar.gz
+    format_overrides:
+      - goos: windows
+        format: zip
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+checksum:
+  name_template: "checksums.txt"
+signs:
+  - cmd: cosign
+    artifacts: checksum
+    args: ["sign-blob", "--output-signature", "${signature}", "${artifact}"]
+    stdin: "${artifact}"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'
+release:
+  prerelease: auto
